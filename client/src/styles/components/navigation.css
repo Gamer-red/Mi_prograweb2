@@ -1,0 +1,159 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(12px);
+  background: rgba(10, 11, 15, 0.85);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  gap: 2rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  font-weight: 800;
+  text-decoration: none;
+  color: var(--primary);
+  font-size: 1.4rem;
+}
+
+.nav__links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nav__links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+  padding: .5rem .8rem;
+  border-radius: 8px;
+  transition: .2s;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.nav__links a:hover {
+  color: var(--primary);
+  background: rgba(255, 45, 85, 0.1);
+}
+
+.cart-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Menú Hamburguesa */
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: 2px solid var(--border);
+  color: var(--txt);
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.menu-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Versión con iconos en móvil */
+.nav__links a .texto-completo {
+  display: inline;
+}
+
+.nav__links a .solo-icono {
+  display: none;
+}
+
+/* Header responsive */
+@media (max-width: 1024px) {
+  .nav__inner {
+    gap: 1rem;
+  }
+  
+  .nav__links {
+    gap: 0.8rem;
+  }
+  
+  .nav__links a {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+  }
+  
+  .brand {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+  
+  .nav__inner {
+    flex-direction: column;
+    height: auto;
+    padding: 1rem 0;
+    gap: 1rem;
+  }
+  
+  .nav__links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(10, 11, 15, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .nav__links--open {
+    display: flex;
+  }
+  
+  .nav__links a,
+  .nav__links .btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .nav__links .texto-completo {
+    display: inline !important;
+  }
+  
+  .nav__links .solo-icono {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav__links {
+    gap: 0.3rem;
+  }
+  
+  .nav__links a {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
