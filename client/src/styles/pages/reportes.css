@@ -1,0 +1,118 @@
+.reporte-ventas {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reporte-content {
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.filtros-form {
+  padding: 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.filtros-row {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtro-separador {
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0 0.5rem;
+  align-self: center;
+}
+
+/* Resumen de ventas */
+.resumen-ventas {
+  padding: 2rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.resumen-ventas h3 {
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+  text-align: center;
+}
+
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.resumen-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: 15px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.resumen-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary);
+}
+
+.resumen-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.resumen-valor {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.resumen-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Responsive para reportes */
+@media (max-width: 768px) {
+  .filtros-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .filtro-separador {
+    text-align: center;
+    margin: 0;
+  }
+  
+  .resumen-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .resumen-card {
+    padding: 1rem;
+  }
+  
+  .filtros-form {
+    padding: 1.5rem;
+  }
+  
+  .resumen-ventas {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .resumen-grid {
+    grid-template-columns: 1fr;
+  }
+}

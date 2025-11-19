@@ -1,0 +1,41 @@
+.section {
+  padding: 4rem 0;
+}
+
+.section__head {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.section__head h2 {
+  font-size: 2.2rem;
+  margin-bottom: .5rem;
+}
+
+.section__head p {
+  color: var(--muted);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.section--compact {
+  padding: 2rem 0;
+}
+
+.section--large {
+  padding: 6rem 0;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 3rem 0;
+  }
+  
+  .section--large {
+    padding: 4rem 0;
+  }
+  
+  .section__head h2 {
+    font-size: 1.8rem;
+  }
+}

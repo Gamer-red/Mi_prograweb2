@@ -1,0 +1,62 @@
+.tabla-container {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.tabla-ventas {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tabla-ventas th {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tabla-ventas td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--txt);
+}
+
+.tabla-ventas tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabla-ventas tr:last-child td {
+  border-bottom: none;
+}
+
+.fila-total {
+  background: rgba(255, 45, 85, 0.1) !important;
+  font-weight: 700;
+}
+
+.fila-total td {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .tabla-container {
+    padding: 0.5rem;
+  }
+  
+  .tabla-ventas {
+    font-size: 0.8rem;
+  }
+  
+  .tabla-ventas th,
+  .tabla-ventas td {
+    padding: 0.7rem 0.5rem;
+  }
+}
