@@ -136,8 +136,87 @@ const getVendorOrders = async (req, res) => {
   }
 };
 
+const getVentasVendedor = async (req, res) => {
+  try {
+    const vendedorId = req.user._id;
+    const { fechaInicio, fechaFin } = req.query;
+    
+    // Construir filtro de fechas
+    let filtroFecha = {};
+    if (fechaInicio || fechaFin) {
+      filtroFecha.fecha = {};
+      if (fechaInicio) filtroFecha.fecha.$gte = new Date(fechaInicio);
+      if (fechaFin) {
+        const fechaFinObj = new Date(fechaFin);
+        fechaFinObj.setHours(23, 59, 59, 999);
+        filtroFecha.fecha.$lte = fechaFinObj;
+      }
+    }
+
+    // Obtener órdenes donde este vendedor tenga productos
+    const orders = await Order.find({
+      ...filtroFecha,
+      'items.vendedor': vendedorId
+    })
+    .populate('user', 'Nombre_usuario')
+    .populate('items.game', 'Nombre_juego imagenes')
+    .sort({ fecha: -1 });
+
+    // Procesar datos para el reporte del vendedor
+    const ventas = [];
+    let ventasTotales = 0;
+    let productosVendidos = 0;
+    const ordenesUnicas = new Set();
+
+    orders.forEach(order => {
+      ordenesUnicas.add(order._id.toString());
+      
+      // Filtrar solo los items de este vendedor
+      const itemsDelVendedor = order.items.filter(item => 
+        item.vendedor.toString() === vendedorId.toString()
+      );
+
+      itemsDelVendedor.forEach(item => {
+        ventas.push({
+          ordenId: order._id,
+          comprador: order.user?.Nombre_usuario || 'N/A',
+          nombreJuego: item.nombreJuego,
+          cantidad: item.cantidad,
+          precio: item.precio,
+          subtotal: item.subtotal,
+          fecha: order.fecha
+        });
+
+        ventasTotales += item.subtotal;
+        productosVendidos += item.cantidad;
+      });
+    });
+
+    const estadisticas = {
+      ventasTotales,
+      productosVendidos,
+      ordenesTotales: ordenesUnicas.size,
+      promedioPorVenta: ventas.length > 0 ? ventasTotales / ventas.length : 0
+    };
+
+    res.json({
+      success: true,
+      ventas,
+      estadisticas
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo ventas del vendedor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener el reporte de ventas'
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
-  getVendorOrders
+  getVendorOrders,
+  getVentasVendedor
 };

@@ -1,21 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const ReporteVentas = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [ventas, setVentas] = useState([]);
+  const [estadisticas, setEstadisticas] = useState({
+    ventasTotales: 0,
+    productosVendidos: 0,
+    ordenesTotales: 0,
+    promedioPorVenta: 0
+  });
+  const [cargando, setCargando] = useState(true);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Aquí iría la lógica para aplicar filtros
-    alert('Filtros aplicados (simulación)');
+  useEffect(() => {
+    obtenerVentasVendedor();
+  }, []);
+
+  const obtenerVentasVendedor = async () => {
+    try {
+      setCargando(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.get('/api/orders/vendedor/ventas', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setVentas(response.data.ventas);
+        setEstadisticas(response.data.estadisticas);
+      }
+    } catch (error) {
+      console.error('Error obteniendo ventas:', error);
+      alert('Error al cargar el reporte de ventas');
+    } finally {
+      setCargando(false);
+    }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setCargando(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.get('/api/orders/vendedor/ventas', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          fechaInicio: fechaInicio || undefined,
+          fechaFin: fechaFin || undefined
+        }
+      });
+
+      if (response.data.success) {
+        setVentas(response.data.ventas);
+        setEstadisticas(response.data.estadisticas);
+      }
+    } catch (error) {
+      console.error('Error aplicando filtros:', error);
+      alert('Error al aplicar filtros');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  // Función para formatear precio
+  const formatearPrecio = (precio) => {
+    return `$${precio.toFixed(2)} MXN`;
+  };
+
+  if (cargando) {
+    return (
+      <section className="section container">
+        <div className="cargando">
+          <h2>Cargando mis ventas...</h2>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="section container">
       <div className="reporte-ventas">
         <div className="section__head">
-          <h2>📊 Reporte de Ventas</h2>
-          <p>Consulta y analiza el historial de ventas de la plataforma</p>
+          <h2>📊 Mis Ventas</h2>
+          <p>Consulta el historial de tus ventas y productos vendidos</p>
         </div>
 
         <div className="reporte-content">
@@ -57,89 +126,73 @@ const ReporteVentas = () => {
             <table className="tabla-ventas">
               <thead>
                 <tr>
+                  <th>Orden ID</th>
+                  <th>Comprador</th>
                   <th>Producto</th>
-                  <th>Nombre del producto</th>
-                  <th>Compañía</th>
                   <th>Cantidad</th>
-                  <th>Precio</th>
-                  <th>Total</th>
+                  <th>Precio Unitario</th>
+                  <th>Subtotal</th>
+                  <th>Fecha</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>🎮</td>
-                  <td>Super Mario Odyssey</td>
-                  <td>Nintendo</td>
-                  <td>5</td>
-                  <td>$1,300 MXN</td>
-                  <td>$6,500 MXN</td>
-                </tr>
-                <tr>
-                  <td>🎮</td>
-                  <td>Halo Infinite</td>
-                  <td>Microsoft</td>
-                  <td>3</td>
-                  <td>$960 MXN</td>
-                  <td>$2,880 MXN</td>
-                </tr>
-                <tr>
-                  <td>🎮</td>
-                  <td>God of War Ragnarök</td>
-                  <td>Sony</td>
-                  <td>2</td>
-                  <td>$1,499 MXN</td>
-                  <td>$2,998 MXN</td>
-                </tr>
-                <tr>
-                  <td>🎮</td>
-                  <td>Cyberpunk 2077</td>
-                  <td>CD Projekt</td>
-                  <td>4</td>
-                  <td>$899 MXN</td>
-                  <td>$3,596 MXN</td>
-                </tr>
-                <tr>
-                  <td>🎮</td>
-                  <td>Animal Crossing</td>
-                  <td>Nintendo</td>
-                  <td>7</td>
-                  <td>$1,350 MXN</td>
-                  <td>$9,450 MXN</td>
-                </tr>
+                {ventas.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                      No tienes ventas registradas en el período seleccionado
+                    </td>
+                  </tr>
+                ) : (
+                  ventas.map((venta, index) => (
+                    <tr key={`${venta.ordenId}-${index}`}>
+                      <td>#{venta.ordenId.slice(-8).toUpperCase()}</td>
+                      <td>{venta.comprador}</td>
+                      <td>{venta.nombreJuego}</td>
+                      <td>{venta.cantidad}</td>
+                      <td>{formatearPrecio(venta.precio)}</td>
+                      <td>{formatearPrecio(venta.subtotal)}</td>
+                      <td>{new Date(venta.fecha).toLocaleDateString('es-ES')}</td>
+                    </tr>
+                  ))
+                )}
                 {/* Fila de totales */}
-                <tr className="fila-total">
-                  <td colSpan="5"><strong>Total General</strong></td>
-                  <td><strong>$25,424 MXN</strong></td>
-                </tr>
+                {ventas.length > 0 && (
+                  <tr className="fila-total">
+                    <td colSpan="5"><strong>Total de Mis Ventas</strong></td>
+                    <td colSpan="2"><strong>{formatearPrecio(estadisticas.ventasTotales)}</strong></td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
-          <div className="resumen-ventas">
-            <h3>📈 Resumen de Ventas</h3>
-            <div className="resumen-grid">
-              <div className="resumen-card">
-                <div className="resumen-icon">💰</div>
-                <div className="resumen-valor">$25,424 MXN</div>
-                <div className="resumen-label">Ventas Totales</div>
-              </div>
-              <div className="resumen-card">
-                <div className="resumen-icon">📦</div>
-                <div className="resumen-valor">21</div>
-                <div className="resumen-label">Productos Vendidos</div>
-              </div>
-              <div className="resumen-card">
-                <div className="resumen-icon">🏢</div>
-                <div className="resumen-valor">4</div>
-                <div className="resumen-label">Compañías</div>
-              </div>
-              <div className="resumen-card">
-                <div className="resumen-icon">📊</div>
-                <div className="resumen-valor">$1,211 MXN</div>
-                <div className="resumen-label">Promedio por Venta</div>
+          {ventas.length > 0 && (
+            <div className="resumen-ventas">
+              <h3>📈 Resumen de Mis Ventas</h3>
+              <div className="resumen-grid">
+                <div className="resumen-card">
+                  <div className="resumen-icon">💰</div>
+                  <div className="resumen-valor">{formatearPrecio(estadisticas.ventasTotales)}</div>
+                  <div className="resumen-label">Ventas Totales</div>
+                </div>
+                <div className="resumen-card">
+                  <div className="resumen-icon">📦</div>
+                  <div className="resumen-valor">{estadisticas.productosVendidos}</div>
+                  <div className="resumen-label">Productos Vendidos</div>
+                </div>
+                <div className="resumen-card">
+                  <div className="resumen-icon">📋</div>
+                  <div className="resumen-valor">{estadisticas.ordenesTotales}</div>
+                  <div className="resumen-label">Órdenes Recibidas</div>
+                </div>
+                <div className="resumen-card">
+                  <div className="resumen-icon">📊</div>
+                  <div className="resumen-valor">{formatearPrecio(estadisticas.promedioPorVenta)}</div>
+                  <div className="resumen-label">Promedio por Venta</div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

@@ -8,5 +8,5 @@ router.use(auth);
 router.post('/', orderController.createOrder);
 router.get('/my-orders', orderController.getUserOrders);
 router.get('/vendor-sales', orderController.getVendorOrders);
-
+router.get('/vendedor/ventas', auth, orderController.getVentasVendedor);
 module.exports = router;
