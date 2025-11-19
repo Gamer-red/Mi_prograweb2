@@ -32,6 +32,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/games', require('./Routes/Games'));
 app.use('/api/cart', require('./Routes/Cart'));
 app.use('/api/orders', require('./Routes/Orders'));
+app.use('/api/reviews', require('./Routes/Review'));
 
 // Conectar a MongoDB y luego iniciar el servidor
 mongoose.connect('mongodb://localhost:27017/gamecommerce')

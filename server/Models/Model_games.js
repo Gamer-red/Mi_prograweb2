@@ -1,6 +1,6 @@
 const { type } = require('express/lib/response');
 const mongoose = require('mongoose');
-const Model_comments = require('./Model_comments');
+const Model_comments = require('./Model_reviews');
 const gameSchema = new mongoose.Schema({
     Nombre_juego: {
         type: String,
