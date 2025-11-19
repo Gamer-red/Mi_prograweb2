@@ -12,7 +12,7 @@ const DetalleCompra = () => {
   const [reviews, setReviews] = useState([]);
   const [enviandoReview, setEnviandoReview] = useState(false);
   const [gameReviews, setGameReviews] = useState({});
-  const [userReviews, setUserReviews] = useState({}); // Nuevo estado para almacenar las reviews del usuario
+  const [userReviews, setUserReviews] = useState({});
 
   useEffect(() => {
     obtenerDetalleCompra();
@@ -63,14 +63,18 @@ const DetalleCompra = () => {
         }
       } catch (error) {
         console.error(`Error obteniendo reviews para juego ${item.game._id}:`, error);
-        reviewsMap[item.game._id] = { reviews: [], averageRating: 0, totalReviews: 0 };
+        // Asegurarnos de que siempre tenga los valores por defecto
+        reviewsMap[item.game._id] = { 
+          reviews: [], 
+          averageRating: 0, 
+          totalReviews: 0 
+        };
       }
     }
 
     setGameReviews(reviewsMap);
   };
 
-  // Nueva función para obtener las reviews del usuario para cada juego
   const obtenerReviewsDelUsuario = async (items) => {
     const token = localStorage.getItem('token');
     const userReviewsMap = {};
@@ -82,10 +86,8 @@ const DetalleCompra = () => {
         });
         
         if (response.data.success && response.data.review) {
-          // El usuario ya tiene una review para este juego
           userReviewsMap[item.game._id] = response.data.review;
         } else {
-          // El usuario no tiene review para este juego
           userReviewsMap[item.game._id] = null;
         }
       } catch (error) {
@@ -97,7 +99,6 @@ const DetalleCompra = () => {
     setUserReviews(userReviewsMap);
   };
 
-  // Función para verificar si el usuario ya reviewó un juego específico
   const usuarioYaReviewo = (gameId) => {
     return userReviews[gameId] !== null && userReviews[gameId] !== undefined;
   };
@@ -105,7 +106,6 @@ const DetalleCompra = () => {
   const handleSubmitReview = async (e, gameId) => {
     e.preventDefault();
     
-    // Validación adicional por si acaso
     if (usuarioYaReviewo(gameId)) {
       alert('❌ Ya has calificado este juego. No puedes enviar otra review.');
       return;
@@ -133,7 +133,6 @@ const DetalleCompra = () => {
         alert('✅ ¡Review enviada exitosamente!');
         setComentario('');
         setCalificacion(5);
-        // Recargar reviews
         await obtenerReviewsDeJuegos(compra.items);
         await obtenerReviewsDelUsuario(compra.items);
       }
@@ -141,7 +140,6 @@ const DetalleCompra = () => {
       console.error('Error enviando review:', error);
       if (error.response?.status === 400 && error.response?.data?.error?.includes('Ya has review')) {
         alert('❌ Ya has calificado este juego anteriormente.');
-        // Actualizar las reviews del usuario
         await obtenerReviewsDelUsuario(compra.items);
       } else {
         alert(error.response?.data?.error || 'Error al enviar la review');
@@ -182,6 +180,24 @@ const DetalleCompra = () => {
 
   const formatearPrecio = (precio) => {
     return `$${precio.toFixed(2)} MXN`;
+  };
+
+  // Función segura para obtener el rating promedio
+  const getAverageRating = (gameId) => {
+    const gameReview = gameReviews[gameId];
+    if (!gameReview || gameReview.averageRating === null || gameReview.averageRating === undefined) {
+      return 0;
+    }
+    return gameReview.averageRating;
+  };
+
+  // Función segura para obtener el total de reviews
+  const getTotalReviews = (gameId) => {
+    const gameReview = gameReviews[gameId];
+    if (!gameReview || gameReview.totalReviews === null || gameReview.totalReviews === undefined) {
+      return 0;
+    }
+    return gameReview.totalReviews;
   };
 
   if (cargando) {
@@ -241,20 +257,20 @@ const DetalleCompra = () => {
                       </span>
                     </div>
                     
-                    {/* Rating promedio del juego */}
+                    {/* Rating promedio del juego - CON VALIDACIÓN */}
                     {gameReviews[item.game._id] && (
                       <div className="rating-promedio">
                         <div className="estrellas-promedio">
-                          {renderEstrellas(Math.round(gameReviews[item.game._id].averageRating))}
+                          {renderEstrellas(Math.round(getAverageRating(item.game._id)))}
                         </div>
                         <span className="rating-texto">
-                          ({gameReviews[item.game._id].averageRating.toFixed(1)} de 5 - {gameReviews[item.game._id].totalReviews} reviews)
+                          ({getAverageRating(item.game._id).toFixed(1)} de 5 - {getTotalReviews(item.game._id)} reviews)
                         </span>
                       </div>
                     )}
 
                     {/* Mostrar si el usuario ya reviewó este juego */}
-                    {usuarioYaReviewo(item.game._id) && (
+                    {usuarioYaReviewo(item.game._id) && userReviews[item.game._id] && (
                       <div className="review-existente">
                         <div className="alert alert-info">
                           <strong>✅ Ya calificaste este juego</strong>
@@ -324,8 +340,6 @@ const DetalleCompra = () => {
                   </div>
                 </section>
               )}
-
-              {/* Reviews existentes de este juego */}
             </div>
           ))}
 
@@ -354,4 +368,5 @@ const DetalleCompra = () => {
     </section>
   );
 };
+
 export default DetalleCompra;

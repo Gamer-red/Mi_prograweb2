@@ -15,8 +15,10 @@ const ProductoPage = () => {
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
 
-  // Cargar datos del producto
+  // Cargar datos del producto y reviews
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -24,7 +26,6 @@ const ProductoPage = () => {
         const response = await gameService.getGameById(id);
         
         if (response.success) {
-          // Mapear datos del backend a la estructura del frontend
           const gameData = response.game;
           const formattedProduct = {
             _id: gameData._id,
@@ -35,23 +36,13 @@ const ProductoPage = () => {
             vendedor: gameData.Vendedor?.Nombre_usuario || 'Vendedor no disponible',
             platform: gameData.plataforma?.Nombre_Plataforma || 'Plataforma no especificada',
             company: gameData.compania?.Nombre_Compania || 'Compañía no especificada',
-            rating: 4.5, // Temporal - puedes agregar rating a tu modelo después
-            // Mapear imágenes
             images: gameData.imagenes && gameData.imagenes.length > 0 
               ? gameData.imagenes.map(img => `http://localhost:3000/uploads/${img.filename}`)
               : ['https://via.placeholder.com/600x400/4A5568/FFFFFF?text=Imagen+No+Disponible']
           };
-
-          console.log('🔍 Datos del juego recibidos:', gameData);
-          console.log('🔍 Plataforma:', gameData.plataforma);
-          console.log('🔍 Categoría:', gameData.categoria);
-          console.log('🔍 Compañía:', gameData.compania);
-          console.log('🔍 Imágenes:', gameData.imagenes);
-         // Y también actualiza el console.log:
-          console.log('🔍 Vendedor:', gameData.Vendedor);
-          console.log('🔍 Vendedor Nombre_usuario:', gameData.Vendedor?.Nombre_usuario);
           
           setProducto(formattedProduct);
+          await loadReviews(gameData._id);
         } else {
           setError('Error al cargar el producto');
         }
@@ -68,7 +59,45 @@ const ProductoPage = () => {
     }
   }, [id]);
 
-    const handleAddToCart = async () => {
+  // Cargar reviews del juego
+  const loadReviews = async (gameId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/reviews/game/${gameId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setReviews(data.reviews);
+          setAverageRating(data.averageRating || 0);
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando reviews:', error);
+    }
+  };
+
+  // Renderizar estrellas
+  const renderEstrellas = (numeroEstrellas) => {
+    const estrellas = [];
+    for (let i = 1; i <= 5; i++) {
+      estrellas.push(
+        <span
+          key={i}
+          className={`estrella ${i <= numeroEstrellas ? 'activa' : ''}`}
+        >
+          {i <= numeroEstrellas ? '★' : '☆'}
+        </span>
+      );
+    }
+    return estrellas;
+  };
+
+  const handleAddToCart = async () => {
     if (!isAuthenticated) {
       alert('Debes iniciar sesión para agregar productos al carrito');
       navigate('/auth');
@@ -122,7 +151,7 @@ const ProductoPage = () => {
       <div className="producto-page">
         <div className="producto-content">
           
-          {/* Columna izquierda: Galería de imágenes */}
+          {/* Galería de imágenes */}
           <aside className="producto-gallery">
             <div className="imagen-principal">
               <img 
@@ -153,7 +182,7 @@ const ProductoPage = () => {
             )}
           </aside>
 
-          {/* Columna derecha: Detalles del producto */}
+          {/* Detalles del producto */}
           <main className="producto-details">
             <div className="producto-header">
               <h1>{producto.nombre_juego}</h1>
@@ -170,8 +199,8 @@ const ProductoPage = () => {
             <div className="producto-platform">
               <span className="platform-badge">{producto.platform}</span>
               <div className="producto-rating">
-                <span className="stars">★★★★☆</span>
-                <span>({producto.rating})</span>
+                {renderEstrellas(Math.round(averageRating))}
+                <span>({averageRating.toFixed(1)})</span>
               </div>
             </div>
 
@@ -245,6 +274,29 @@ const ProductoPage = () => {
                 </button>
               </div>
             </form>
+
+            {/* Sección de Comentarios */}
+            <section className="comentarios-section">
+              <h3>Comentarios ({reviews.length})</h3>
+              
+              {reviews.length === 0 ? (
+                <p>No hay comentarios aún.</p>
+              ) : (
+                <div className="comentarios-list">
+                  {reviews.map((review) => (
+                    <div key={review._id} className="comentario-card">
+                      <div className="comentario-header">
+                        <strong>{review.user?.Nombre_usuario || 'Usuario'}</strong>
+                        <div className="comentario-rating">
+                          {renderEstrellas(review.calificacion)}
+                        </div>
+                      </div>
+                      <p className="comentario-texto">{review.comentario}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           </main>
         </div>
       </div>
