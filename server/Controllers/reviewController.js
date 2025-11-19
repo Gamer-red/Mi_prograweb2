@@ -1,5 +1,33 @@
 const Review = require('../Models/Model_reviews');
 const Order = require('../Models/Model_orders');
+const mongoose = require('mongoose'); // Asegúrate de importar mongoose
+
+// NUEVO CONTROLADOR: Verificar si el usuario ya tiene review para un juego específico
+const getUserGameReview = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { gameId } = req.params;
+
+    console.log('🔍 Verificando review del usuario:', userId, 'para juego:', gameId);
+
+    const review = await Review.findOne({
+      game: gameId,
+      user: userId
+    });
+
+    res.json({
+      success: true,
+      review: review // Será null si no existe
+    });
+
+  } catch (error) {
+    console.error('❌ Error verificando review del usuario:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar la review del usuario'
+    });
+  }
+};
 
 // Crear una review
 const createReview = async (req, res) => {
@@ -87,7 +115,7 @@ const getGameReviews = async (req, res) => {
 
     // Calcular promedio de calificaciones
     const averageRating = await Review.aggregate([
-      { $match: { game: mongoose.Types.ObjectId(gameId) } },
+      { $match: { game: new mongoose.Types.ObjectId(gameId) } },
       { $group: { _id: '$game', average: { $avg: '$calificacion' } } }
     ]);
 
@@ -198,6 +226,7 @@ const deleteReview = async (req, res) => {
 module.exports = {
   createReview,
   getGameReviews,
+  getUserGameReview, // Exportar el nuevo controlador
   getUserReviews,
   updateReview,
   deleteReview

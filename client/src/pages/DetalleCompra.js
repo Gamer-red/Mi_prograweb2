@@ -12,6 +12,7 @@ const DetalleCompra = () => {
   const [reviews, setReviews] = useState([]);
   const [enviandoReview, setEnviandoReview] = useState(false);
   const [gameReviews, setGameReviews] = useState({});
+  const [userReviews, setUserReviews] = useState({}); // Nuevo estado para almacenar las reviews del usuario
 
   useEffect(() => {
     obtenerDetalleCompra();
@@ -33,6 +34,8 @@ const DetalleCompra = () => {
           setCompra(compraEncontrada);
           // Obtener reviews para cada juego de la compra
           await obtenerReviewsDeJuegos(compraEncontrada.items);
+          // Obtener las reviews del usuario para esta compra
+          await obtenerReviewsDelUsuario(compraEncontrada.items);
         } else {
           setError('Compra no encontrada');
         }
@@ -67,8 +70,46 @@ const DetalleCompra = () => {
     setGameReviews(reviewsMap);
   };
 
+  // Nueva función para obtener las reviews del usuario para cada juego
+  const obtenerReviewsDelUsuario = async (items) => {
+    const token = localStorage.getItem('token');
+    const userReviewsMap = {};
+
+    for (const item of items) {
+      try {
+        const response = await axios.get(`/api/reviews/user-game/${item.game._id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data.success && response.data.review) {
+          // El usuario ya tiene una review para este juego
+          userReviewsMap[item.game._id] = response.data.review;
+        } else {
+          // El usuario no tiene review para este juego
+          userReviewsMap[item.game._id] = null;
+        }
+      } catch (error) {
+        console.error(`Error verificando review del usuario para juego ${item.game._id}:`, error);
+        userReviewsMap[item.game._id] = null;
+      }
+    }
+
+    setUserReviews(userReviewsMap);
+  };
+
+  // Función para verificar si el usuario ya reviewó un juego específico
+  const usuarioYaReviewo = (gameId) => {
+    return userReviews[gameId] !== null && userReviews[gameId] !== undefined;
+  };
+
   const handleSubmitReview = async (e, gameId) => {
     e.preventDefault();
+    
+    // Validación adicional por si acaso
+    if (usuarioYaReviewo(gameId)) {
+      alert('❌ Ya has calificado este juego. No puedes enviar otra review.');
+      return;
+    }
     
     if (!comentario.trim()) {
       alert('Por favor escribe un comentario');
@@ -94,10 +135,17 @@ const DetalleCompra = () => {
         setCalificacion(5);
         // Recargar reviews
         await obtenerReviewsDeJuegos(compra.items);
+        await obtenerReviewsDelUsuario(compra.items);
       }
     } catch (error) {
       console.error('Error enviando review:', error);
-      alert(error.response?.data?.error || 'Error al enviar la review');
+      if (error.response?.status === 400 && error.response?.data?.error?.includes('Ya has review')) {
+        alert('❌ Ya has calificado este juego anteriormente.');
+        // Actualizar las reviews del usuario
+        await obtenerReviewsDelUsuario(compra.items);
+      } else {
+        alert(error.response?.data?.error || 'Error al enviar la review');
+      }
     } finally {
       setEnviandoReview(false);
     }
@@ -204,51 +252,78 @@ const DetalleCompra = () => {
                         </span>
                       </div>
                     )}
+
+                    {/* Mostrar si el usuario ya reviewó este juego */}
+                    {usuarioYaReviewo(item.game._id) && (
+                      <div className="review-existente">
+                        <div className="alert alert-info">
+                          <strong>✅ Ya calificaste este juego</strong>
+                          <div className="tu-calificacion">
+                            <span>Tu calificación: </span>
+                            <div className="estrellas-usuario">
+                              {renderEstrellas(userReviews[item.game._id].calificacion)}
+                            </div>
+                            <p className="tu-comentario">
+                              "<em>{userReviews[item.game._id].comentario}</em>"
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
 
-              {/* Sección de review para este juego */}
-              <section className="calificacion-section">
-                <h3>⭐ Califica este Juego</h3>
-                <div className="calificacion-content">
-                  <div className="estrellas-calificacion">
-                    <p>¿Cómo calificarías {item.nombreJuego}?</p>
-                    <div className="estrellas-container">
-                      {renderEstrellas(calificacion, true)}
-                      <span className="calificacion-texto">
-                        ({calificacion} de 5 estrellas)
-                      </span>
+              {/* Sección de review para este juego - Solo mostrar si no ha sido reviewado */}
+              {!usuarioYaReviewo(item.game._id) ? (
+                <section className="calificacion-section">
+                  <h3>⭐ Califica este Juego</h3>
+                  <div className="calificacion-content">
+                    <div className="estrellas-calificacion">
+                      <p>¿Cómo calificarías {item.nombreJuego}?</p>
+                      <div className="estrellas-container">
+                        {renderEstrellas(calificacion, true)}
+                        <span className="calificacion-texto">
+                          ({calificacion} de 5 estrellas)
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <form onSubmit={(e) => handleSubmitReview(e, item.game._id)} className="comentario-form">
-                    <div className="form-group">
-                      <label htmlFor={`comentario-${index}`}>📝 Deja tu review:</label>
-                      <textarea 
-                        id={`comentario-${index}`}
-                        name="comentario" 
-                        rows="4"
-                        value={comentario}
-                        onChange={(e) => setComentario(e.target.value)}
-                        className="form-control"
-                        placeholder="Comparte tu experiencia con este juego..."
-                        required
-                      />
-                    </div>
-                    
-                    <div className="form-actions">
-                      <button 
-                        type="submit" 
-                        className="btn btn--primary"
-                        disabled={enviandoReview}
-                      >
-                        {enviandoReview ? '⏳ Enviando...' : '📤 Enviar Review'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </section>
+                    <form onSubmit={(e) => handleSubmitReview(e, item.game._id)} className="comentario-form">
+                      <div className="form-group">
+                        <label htmlFor={`comentario-${index}`}>📝 Deja tu review:</label>
+                        <textarea 
+                          id={`comentario-${index}`}
+                          name="comentario" 
+                          rows="4"
+                          value={comentario}
+                          onChange={(e) => setComentario(e.target.value)}
+                          className="form-control"
+                          placeholder="Comparte tu experiencia con este juego..."
+                          required
+                        />
+                      </div>
+                      
+                      <div className="form-actions">
+                        <button 
+                          type="submit" 
+                          className="btn btn--primary"
+                          disabled={enviandoReview}
+                        >
+                          {enviandoReview ? '⏳ Enviando...' : '📤 Enviar Review'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </section>
+              ) : (
+                <section className="calificacion-section">
+                  <div className="alert alert-success">
+                    <h4>✅ ¡Gracias por tu review!</h4>
+                    <p>Ya has calificado este juego. Tu opinión ayuda a otros compradores.</p>
+                  </div>
+                </section>
+              )}
 
               {/* Reviews existentes de este juego */}
             </div>

@@ -21,4 +21,6 @@ router.put('/:reviewId', reviewController.updateReview);
 // Eliminar review
 router.delete('/:reviewId', reviewController.deleteReview);
 
+router.get('/user-game/:gameId', reviewController.getUserGameReview);
+
 module.exports = router;
