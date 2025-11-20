@@ -231,6 +231,84 @@
   border: 1px solid #f5c6cb;
 }
 
+ .avatar-container {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .avatar-image {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid var(--primary);
+        }
+
+        .avatar-placeholder {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          background: var(--bg-secondary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 3rem;
+          border: 3px solid var(--border);
+        }
+
+        .avatar-actions {
+          display: flex;
+          gap: 0.5rem;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .avatar-upload-btn {
+          background: var(--primary);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          cursor: pointer;
+          border: none;
+          font-size: 0.9rem;
+          transition: background 0.3s ease;
+        }
+
+        .avatar-upload-btn:hover {
+          background: var(--accent);
+        }
+
+        .avatar-remove-btn {
+          background: #ff4757;
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          cursor: pointer;
+          border: none;
+          font-size: 0.9rem;
+          transition: background 0.3s ease;
+        }
+
+        .avatar-remove-btn:hover {
+          background: #ff3742;
+        }
+
+        .upload-info {
+          background: var(--bg-secondary);
+          padding: 1rem;
+          border-radius: 8px;
+          margin: 1rem 0;
+          border-left: 4px solid var(--primary);
+        }
+
+        .upload-info p {
+          margin: 0.25rem 0;
+          font-size: 0.9rem;
+        }
+
 /* Responsive para profile */
 @media (max-width: 768px) {
   .profile-tabs {

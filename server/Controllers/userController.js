@@ -5,9 +5,9 @@ const bcrypt = require('bcryptjs'); // ✅ Usar bcryptjs
 // Registrar nuevo usuario
 const register = async (req, res) => {
   try {
-    const { Nombre_usuario, Correo, Contrasenia, Sexo, Rol, Telefono } = req.body;
+    const { Nombre_usuario, Correo, Contrasenia, Sexo, Rol, Telefono, Avatar} = req.body;
 
-    console.log('📝 Datos recibidos para registro:', { Nombre_usuario, Correo, Sexo, Rol, Telefono });
+    console.log('📝 Datos recibidos para registro:', { Nombre_usuario, Correo, Sexo, Rol, Telefono, Avatar });
 
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ 
@@ -32,7 +32,8 @@ const register = async (req, res) => {
       Contrasenia: hashedPassword, // ✅ Guardar contraseña hasheada
       Sexo,
       Rol,
-      Telefono
+      Telefono,
+      Avatar
     });
 
     const savedUser = await user.save();
@@ -48,7 +49,8 @@ const register = async (req, res) => {
         Correo: savedUser.Correo,
         Rol: savedUser.Rol,
         Sexo: savedUser.Sexo,
-        Telefono: savedUser.Telefono
+        Telefono: savedUser.Telefono,
+        Avatar: savedUser.Avatar
       }
     });
   } catch (error) {
@@ -111,7 +113,8 @@ const login = async (req, res) => {
         Correo: user.Correo,
         Rol: user.Rol,
         Sexo: user.Sexo,
-        Telefono: user.Telefono
+        Telefono: user.Telefono,
+        Avatar: user.Avatar
       },
        token: token
     });

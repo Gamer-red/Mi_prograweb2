@@ -41,7 +41,7 @@ const AuthProvider = ({ children }) => {
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       localStorage.setItem('token', response.token);
       
-      return { success: true };
+      return { success: true, user: response.user };
     } catch (error) {
       console.error('Error en AuthContext.login:', error);
       return { success: false, error: error.message };

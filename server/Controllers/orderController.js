@@ -93,8 +93,16 @@ const getUserOrders = async (req, res) => {
   try {
     const userId = req.user._id;
     
-    const orders = await Order.find({ user: userId })
-      .populate('items.game', 'Nombre_juego imagenes')
+   const orders = await Order.find({ user: userId })
+    .populate({
+      path: 'items.game',
+      select: 'Nombre_juego imagenes',
+      populate: {
+        path: 'imagenes',   // <── AQUI ESTA LA CLAVE
+        model: 'Media'
+      }
+    })
+
       .sort({ fecha: -1 });
 
     res.json({
@@ -120,7 +128,14 @@ const getVendorOrders = async (req, res) => {
       'items.vendedor': vendorId 
     })
     .populate('user', 'Nombre_usuario Correo')
-    .populate('items.game', 'Nombre_juego imagenes')
+    .populate({
+      path: 'items.game',
+      select: 'Nombre_juego imagenes',
+      populate: {
+        path: 'imagenes',
+        model: 'Media'
+      }
+    })
     .sort({ fecha: -1 });
 
     res.json({

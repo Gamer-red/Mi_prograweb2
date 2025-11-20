@@ -265,13 +265,6 @@ const ProductoPage = () => {
                 >
                   {producto.cantidad === 0 ? '❌ Agotado' : '🛒 Agregar al Carrito'}
                 </button>
-                <button 
-                  type="button" 
-                  className="btn btn--accent btn--large"
-                  disabled={producto.cantidad === 0}
-                >
-                  {producto.cantidad === 0 ? 'No Disponible' : '💳 Comprar Ahora'}
-                </button>
               </div>
             </form>
 

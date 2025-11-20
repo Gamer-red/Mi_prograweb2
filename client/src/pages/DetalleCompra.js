@@ -239,11 +239,15 @@ const DetalleCompra = () => {
               <section className="producto-section">
                 <div className="producto-header-corregido">
                   <div className="producto-imagen-corregido">
-                    <img 
-                      src={item.game?.imagenes?.[0] || 'https://via.placeholder.com/150'} 
-                      alt={item.nombreJuego}
-                      className="imagen-producto-corregido"
-                    />
+                    <img
+                            src={
+                              item.game?.imagenes?.[0]?.filename
+                                ? `http://localhost:3000/uploads/${item.game.imagenes[0].filename}`
+                                : 'https://via.placeholder.com/300x400/4A5568/FFFFFF?text=Sin+Imagen'
+                            }
+                            alt={item.nombreJuego}
+                            className="imagen-item"
+                        />
                   </div>
                   <div className="producto-info-corregido">
                     <p className="fecha-compra">

@@ -10,10 +10,13 @@ const Register = ({ onSwitchToLogin }) => {
     confirmPassword: '',
     sexo: '',
     telefono: '',
-    tipo_usuario: '' // Nuevo campo agregado
+    tipo_usuario: '', // Nuevo campo agregado
+    avatar: '' // Avatar seleccionado
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadInfo, setUploadInfo] = useState(null);
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -25,25 +28,152 @@ const Register = ({ onSwitchToLogin }) => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    
+    // Limpiar errores previos
     setError('');
+    setUploadInfo(null);
+    
+    if (!file) {
+      return;
+    }
 
-    if (formData.contrasenia !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    // Validar tipo de archivo (solo imágenes)
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      setError('❌ Tipo de archivo no válido. Solo se permiten imágenes (JPG, PNG, GIF, WEBP)');
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+    
+    // Validar tamaño (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      setError(`❌ La imagen es demasiado grande (${fileSizeMB}MB). El tamaño máximo permitido es 5MB`);
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    // Mostrar información del archivo
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    setUploadInfo({
+      name: file.name,
+      size: fileSizeMB,
+      type: file.type
+    });
+
+    // Leer y mostrar vista previa
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const imageUrl = reader.result;
+      setFormData({
+        ...formData,
+        avatar: imageUrl
+      });
+      setAvatarPreview(imageUrl);
+    };
+    reader.onerror = () => {
+      setError('❌ Error al leer el archivo. Por favor intenta con otra imagen.');
+      e.target.value = ''; // Limpiar el input
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const validateEmail = (email) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+  };
+
+  const validatePassword = (password) => {
+  // Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo
+  const regex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/;
+  return regex.test(password);
+  };
+
+  const validatePhone = (telefono) => {
+  const regex = /^[0-9]{10}$/;
+  return regex.test(telefono);
+  };
+  
+
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // --- VALIDACIONES FRONT ---
+
+    // Nombre mínimo 3 caracteres
+    if (formData.nombre_usuario.trim().length < 3) {
+      setError("El nombre de usuario debe tener al menos 3 caracteres.");
       setLoading(false);
       return;
     }
 
-    const result = await register(formData);
+    // Validar email
+    if (!validateEmail(formData.correo)) {
+      setError("El correo electrónico no es válido.");
+      setLoading(false);
+      return;
+    }
+
+    // Contraseña segura
+    if (!validatePassword(formData.contrasenia)) {
+      setError(
+        "La contraseña debe tener mínimo 8 caracteres, incluir mayúsculas, minúsculas, número y un símbolo."
+      );
+      setLoading(false);
+      return;
+    }
+
+    // Confirmación de contraseña
+    if (formData.contrasenia !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      setLoading(false);
+      return;
+    }
+
+    // Validar tipo_usuario
+    if (!formData.tipo_usuario) {
+      setError("Debes seleccionar un tipo de cuenta (Comprador o Vendedor).");
+      setLoading(false);
+      return;
+    }
+
+    // Validar sexo
+    if (!formData.sexo) {
+      setError("Selecciona tu sexo.");
+      setLoading(false);
+      return;
+    }
+
+    // Validar teléfono
+    if (!validatePhone(formData.telefono)) {
+      setError("El número de teléfono debe tener exactamente 10 dígitos.");
+      setLoading(false);
+      return;
+    }
+
+   
+    if (!formData.avatar) {
+      setError("Debes seleccionar una foto de perfil.");
+      setLoading(false);
+      return;
+    }
     
+
+    // --- ENVÍO AL BACK ---
+    const result = await register(formData);
+
     if (result.success) {
-      navigate('/');
+      navigate("/");
     } else {
       setError(result.error);
     }
-    
+
     setLoading(false);
   };
 
@@ -188,6 +318,58 @@ const Register = ({ onSwitchToLogin }) => {
             placeholder="Tu número de teléfono"
             required
           />
+        </div>
+
+        {/* Selección de Avatar */}
+        <div className="form-group">
+          <label>Foto de perfil</label>
+          <div className="avatar-selection">
+            {/* Vista previa de la imagen subida */}
+            <div className="avatar-preview-container">
+              <div className="avatar-preview">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Vista previa del avatar" />
+                ) : (
+                  <div className="avatar-placeholder">👤</div>
+                )}
+              </div>
+              <div className="avatar-preview-info">
+                <p className="avatar-preview-label">
+                  {avatarPreview ? '✅ Imagen seleccionada' : 'Sube tu foto de perfil'}
+                </p>
+                {uploadInfo && (
+                  <div className="avatar-file-info">
+                    <p className="avatar-file-name">📄 {uploadInfo.name}</p>
+                    <p className="avatar-file-size">📊 Tamaño: {uploadInfo.size} MB</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Botón para subir imagen */}
+            <div className="avatar-upload">
+              <label htmlFor="avatar-upload" className="avatar-upload-button">
+                <span>📷 Subir imagen</span>
+                <input
+                  type="file"
+                  id="avatar-upload"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handleImageUpload}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              
+              {/* Mensaje informativo sobre formatos aceptados */}
+              <div className="avatar-upload-info">
+                <p className="avatar-upload-hint">
+                  <strong>Formatos aceptados:</strong> JPG, PNG, GIF, WEBP
+                </p>
+                <p className="avatar-upload-hint">
+                  <strong>Tamaño máximo:</strong> 5MB
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}

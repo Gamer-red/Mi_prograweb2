@@ -9,6 +9,8 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('perfil');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadInfo, setUploadInfo] = useState(null);
 
   // Datos de ejemplo para usuario no logueado
   const guestUser = {
@@ -16,7 +18,8 @@ const ProfilePage = () => {
     Correo: 'invitado@ejemplo.com',
     Telefono: 'No especificado',
     Sexo: 'No especificado',
-    Rol: 'Invitado'
+    Rol: 'Invitado',
+    Avatar: null
   };
 
   const user = isAuthenticated ? currentUser : guestUser;
@@ -28,7 +31,8 @@ const ProfilePage = () => {
     Telefono: '',
     Sexo: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    Avatar: ''
   });
 
   // Cargar datos del usuario cuando cambie
@@ -40,8 +44,14 @@ const ProfilePage = () => {
         Telefono: currentUser.Telefono || '',
         Sexo: currentUser.Sexo || '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        Avatar: currentUser.Avatar || ''
       });
+      
+      // Establecer la vista previa del avatar si existe
+      if (currentUser.Avatar) {
+        setAvatarPreview(currentUser.Avatar);
+      }
     }
   }, [currentUser, isAuthenticated]);
 
@@ -53,7 +63,62 @@ const ProfilePage = () => {
     navigate('/auth');
   };
 
-  // FUNCIÓN ACTUALIZADA: Guardar cambios
+  // Función para manejar la subida de imagen
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    
+    // Limpiar errores previos
+    setMessage('');
+    setUploadInfo(null);
+    
+    if (!file) {
+      return;
+    }
+
+    // Validar tipo de archivo (solo imágenes)
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      setMessage('❌ Tipo de archivo no válido. Solo se permiten imágenes (JPG, PNG, GIF, WEBP)');
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+    
+    // Validar tamaño (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      setMessage(`❌ La imagen es demasiado grande (${fileSizeMB}MB). El tamaño máximo permitido es 5MB`);
+      e.target.value = ''; // Limpiar el input
+      return;
+    }
+
+    // Mostrar información del archivo
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    setUploadInfo({
+      name: file.name,
+      size: fileSizeMB,
+      type: file.type
+    });
+
+    // Leer y mostrar vista previa
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const imageUrl = reader.result;
+      setFormData(prev => ({
+        ...prev,
+        Avatar: imageUrl
+      }));
+      setAvatarPreview(imageUrl);
+      setMessage('✅ Imagen cargada correctamente. Haz clic en "Guardar Cambios" para actualizar.');
+    };
+    reader.onerror = () => {
+      setMessage('❌ Error al leer el archivo. Por favor intenta con otra imagen.');
+      e.target.value = ''; // Limpiar el input
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // FUNCIÓN ACTUALIZADA: Guardar cambios (incluyendo avatar)
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -64,12 +129,12 @@ const ProfilePage = () => {
 
     // Validaciones
     if (formData.password && formData.password !== formData.confirmPassword) {
-      setMessage('Las contraseñas no coinciden');
+      setMessage('❌ Las contraseñas no coinciden');
       return;
     }
 
     if (formData.password && formData.password.length < 6) {
-      setMessage('La contraseña debe tener al menos 6 caracteres');
+      setMessage('❌ La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -90,10 +155,18 @@ const ProfilePage = () => {
         updateData.Contrasenia = formData.password;
       }
 
-      console.log('Enviando datos de actualización:', updateData);
+      // Incluir avatar si hay uno nuevo
+      if (formData.Avatar && formData.Avatar !== currentUser.Avatar) {
+        updateData.Avatar = formData.Avatar;
+      }
+
+      console.log('Enviando datos de actualización:', {
+        ...updateData,
+        Avatar: updateData.Avatar ? `Base64 (${updateData.Avatar.length} caracteres)` : 'Sin cambios'
+      });
 
       // Llamar a la API para actualizar
-      const response = await axios.put(`/api/users/${currentUser.id}`, updateData);
+      const response = await axios.put(`/api/users/${currentUser.id || currentUser._id}`, updateData);
       
       if (response.data.success) {
         setMessage('✅ Perfil actualizado exitosamente');
@@ -134,10 +207,13 @@ const ProfilePage = () => {
         Telefono: currentUser.Telefono || '',
         Sexo: currentUser.Sexo || '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        Avatar: currentUser.Avatar || ''
       });
+      setAvatarPreview(currentUser.Avatar || null);
     }
     setMessage('');
+    setUploadInfo(null);
   };
 
   return (
@@ -178,12 +254,6 @@ const ProfilePage = () => {
           >
             👤 Información Personal
           </button>
-          <button 
-            className={`profile-tab ${activeTab === 'Reportes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('Reportes')}
-          >
-            🛒 Mis Reportes
-          </button>
         </div>
 
         {/* Contenido de las tabs */}
@@ -192,11 +262,37 @@ const ProfilePage = () => {
             <div className="tab-content active">
               <div className="profile-header">
                 <div className="profile-avatar">
-                  <img 
-                    src="https://cdn-icons-png.flaticon.com/512/847/847969.png" 
-                    alt="Icono de usuario" 
-                    width="120"
-                  />
+                  {/* Avatar del usuario */}
+                  <div className="avatar-container">
+                    {avatarPreview ? (
+                      <img 
+                        src={avatarPreview} 
+                        alt="Avatar del usuario" 
+                        className="avatar-image"
+                      />
+                    ) : (
+                      <div className="avatar-placeholder">
+                        👤
+                      </div>
+                    )}
+                    
+                    {/* Botón para cambiar imagen (solo para usuarios autenticados) */}
+                    {isAuthenticated && (
+                      <div className="avatar-actions">
+                        <label htmlFor="avatar-upload-profile" className="avatar-upload-btn">
+                          📷 Cambiar
+                          <input
+                            type="file"
+                            id="avatar-upload-profile"
+                            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                            onChange={handleImageUpload}
+                            style={{ display: 'none' }}
+                          />
+                        </label>                    
+                      </div>
+                    )}
+                  </div>
+                  
                   {!isAuthenticated ? (
                     <div className="guest-badge">Invitado</div>
                   ) : (
@@ -216,6 +312,14 @@ const ProfilePage = () => {
                   )}
                 </div>
               </div>
+
+              {/* Información de archivo subido */}
+              {uploadInfo && (
+                <div className="upload-info">
+                  <p><strong>📄 Archivo:</strong> {uploadInfo.name}</p>
+                  <p><strong>📊 Tamaño:</strong> {uploadInfo.size} MB</p>
+                </div>
+              )}
 
               <div className="profile-form-container">
                 <h3>Información Personal</h3>
@@ -356,37 +460,10 @@ const ProfilePage = () => {
               </div>
             </div>
           )}
-
-          {activeTab === 'Reportes' && (
-            <div className="tab-content">
-              <div className="tab-placeholder">
-                <h3>🛒 Reportes</h3>
-                {!isAuthenticated ? (
-                  <div className="guest-message-tab">
-                    <p>Inicia sesión para ver tu historial de Reportes</p>
-                    <button onClick={handleLoginRedirect} className="btn btn--primary">
-                      Iniciar Sesión
-                    </button>
-                  </div>
-                ) : (
-                  <div className="reports-info">
-                    <p><strong>Rol:</strong> {user.Rol}</p>
-                    <p><strong>Usuario:</strong> {user.Nombre_usuario}</p>
-                    <p>No tienes reportes disponibles en este momento.</p>
-                    {user.Rol === 'vendedor' && (
-                      <p>Como vendedor, aquí podrás ver tus reportes de ventas.</p>
-                    )}
-                    {user.Rol === 'cliente' && (
-                      <p>Como cliente, aquí podrás ver tu historial de compras.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}          
         </div>
       </div>
     </section>
   );
 };
+
 export default ProfilePage;

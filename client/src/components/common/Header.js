@@ -41,10 +41,7 @@ const Header = () => {
         
         <nav className={`nav__links ${menuOpen ? 'nav__links--open' : ''}`}>
           {/* Opciones para TODOS los usuarios */}
-          <Link to="/catalog" onClick={handleNavClick}>
-            <span className="texto-completo">Catálogo</span>
-            <span className="solo-icono">📋</span>
-          </Link>
+          
 
           {/* ✅ Opciones solo para VENDEDORES */}
           {isAuthenticated && isVendedor && (
@@ -68,8 +65,12 @@ const Header = () => {
                 <span className="solo-icono">📦</span>
               </Link>
               <Link to="/cart" className="cart-link" onClick={handleNavClick}>
-                <span className="texto-completo">Carrito ({totalItems})</span>
+                <span className="texto-completo">Carrito</span>
                 <span className="solo-icono">🛒 ({totalItems})</span>
+              </Link>
+              <Link to="/catalog" onClick={handleNavClick}>
+                <span className="texto-completo">Catálogo</span>
+                <span className="solo-icono">📋</span>
               </Link>
             </>
           )}

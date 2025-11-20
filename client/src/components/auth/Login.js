@@ -20,21 +20,27 @@ const Login = ({ onSwitchToRegister }) => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      setError('');
 
-    const result = await login(formData.email, formData.password);
-    
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.error);
-    }
-    
-    setLoading(false);
-  };
+      const result = await login(formData.email, formData.password);
+
+      if (result.success) {
+        if (result.user.Rol === 'vendedor') {
+          navigate('/reporte-ventas');
+        } else if (result.user.Rol === 'cliente') {
+          navigate('/');
+        } else {
+          navigate('/');
+        }
+      } else {
+        setError(result.error);
+      }
+
+      setLoading(false);
+    };
 
   return (
     <div className="auth-container">

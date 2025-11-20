@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true  // ✅ CORREGIR
     },
+     Avatar: {
+        type: String, // Guardaremos la URL o base64 de la imagen
+        default: null
+    },
     cart: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cart'

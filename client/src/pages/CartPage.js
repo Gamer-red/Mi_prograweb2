@@ -140,11 +140,15 @@ const CartPage = () => {
               {/* ✅ VERIFICACIÓN SEGURA DE cart.items */}
               {cart.items.map((item) => (
                 <div key={item._id || item.game._id} className="cart-item">
-                  <img 
-                    src={getImageUrl(item.game)} 
-                    alt={item.game.Nombre_juego}
-                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }}
-                  />
+                  <img
+                            src={
+                              item.game?.imagenes?.[0]?.filename
+                                ? `http://localhost:3000/uploads/${item.game.imagenes[0].filename}`
+                                : 'https://via.placeholder.com/300x400/4A5568/FFFFFF?text=Sin+Imagen'
+                            }
+                            alt={item.nombreJuego}
+                            className="imagen-item"
+                    />
                   
                   <div className="cart-item__info">
                     <h4 className="cart-item__title">{item.game.Nombre_juego}</h4>

@@ -64,22 +64,6 @@ const GameCard = ({ game }) => {
             <div className="price">${game.precio} MXN</div>
           </div>
         </div>
-
-        <div className="card__actions">
-          <button 
-            className="btn btn--primary" 
-            style={{ flex: 1 }}
-            onClick={handleAddToCart}
-          >
-            🛒 Agregar
-          </button>
-          <button 
-            className="btn btn--ghost"
-            onClick={handleAddToWishlist}
-          >
-            ❤️
-          </button>
-        </div>
       </div>
     </div>
   );
