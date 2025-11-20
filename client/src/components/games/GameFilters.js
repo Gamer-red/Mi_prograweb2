@@ -6,9 +6,9 @@ const GameFilters = () => {
 
   const platforms = [
     { value: 'all', label: 'Todos' },
-    { value: 'Nintendo Switch', label: 'Nintendo Switch' },
-    { value: 'PlayStation 5', label: 'PlayStation 5' },
-    { value: 'Xbox Series X|S', label: 'Xbox Series' },
+    { value: 'Nintendo', label: 'Nintendo ' },
+    { value: 'PlayStation', label: 'PlayStation ' },
+    { value: 'Xbox', label: 'Xbox ' },
     { value: 'PC', label: 'PC' }
   ];
 

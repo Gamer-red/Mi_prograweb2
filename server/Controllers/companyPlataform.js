@@ -1,4 +1,4 @@
-const Platform = require('../Models/Model_plataform');  
+const Platform = require('../models/Model_plataform');  
 
 const getPlatforms = async (req, res) => {  
   try {

@@ -35,76 +35,112 @@ const NuevoProducto = () => {
     setSelectedImages(files);
   };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
+    // --- VALIDACIONES FRONT ---
+
+    // Validar nombre
+    if (!e.target.nombre.value.trim()) {
+      alert("El nombre del juego es obligatorio.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar cantidad (no negativa)
+    const cantidad = Number(e.target.cantidad.value);
+    if (isNaN(cantidad) || cantidad <= 0) {
+      alert("La cantidad debe ser un número mayor a 0.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar precio (no negativo)
+    const precio = Number(e.target.precio.value);
+    if (isNaN(precio) || precio <= 0) {
+      alert("El precio debe ser un número mayor a 0.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar información del juego
+    if (!e.target.informacion.value.trim()) {
+      alert("La información del juego es obligatoria.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar plataforma
+    if (!e.target.plataforma.value) {
+      alert("Debes seleccionar una plataforma.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar categoría
+    if (!e.target.categoria.value) {
+      alert("Debes seleccionar una categoría.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validar imágenes (exactamente 3)
+    if (selectedImages.length !== 3) {
+      alert("Debes subir exactamente 3 imágenes del juego.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
-      // Obtener el token de autenticación
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      console.log('🔍 CurrentUser del localStorage:', currentUser);
-
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
       if (!currentUser) {
-        alert('Debes iniciar sesión para crear un producto');
+        alert("Debes iniciar sesión para crear un producto.");
         setSubmitting(false);
         return;
       }
 
-      // OBTENER EL TOKEN - Esta es la parte clave que falta
-      const token = localStorage.getItem('token') || currentUser.token;
-      console.log('🔑 Token obtenido:', token ? '✅ Sí' : '❌ No');
-
+      const token = localStorage.getItem("token") || currentUser.token;
       if (!token) {
-        alert('Error de autenticación. Vuelve a iniciar sesión.');
+        alert("Error de autenticación. Vuelve a iniciar sesión.");
         setSubmitting(false);
         return;
       }
 
-      // Mostrar datos que se enviarán
-      console.log('📝 Datos del formulario:');
-      console.log('   - Usuario ID:', currentUser.id || currentUser._id);
-      console.log('   - Token:', token ? 'Presente' : 'Faltante');
-
-      // Crear FormData
       const formData = new FormData();
-      formData.append('nombre', e.target.nombre.value);
-      formData.append('cantidad', e.target.cantidad.value);
-      formData.append('precio', e.target.precio.value);
-      formData.append('informacion', e.target.informacion.value);
-      formData.append('plataforma', e.target.plataforma.value);
-      formData.append('categoria', e.target.categoria.value);
-      
+      formData.append("nombre", e.target.nombre.value);
+      formData.append("cantidad", cantidad);
+      formData.append("precio", precio);
+      formData.append("informacion", e.target.informacion.value);
+      formData.append("plataforma", e.target.plataforma.value);
+      formData.append("categoria", e.target.categoria.value);
+
       if (e.target.compania.value) {
-        formData.append('compania', e.target.compania.value);
+        formData.append("compania", e.target.compania.value);
       }
 
       // Agregar imágenes
       selectedImages.forEach((image) => {
-        formData.append('imagenes', image);
+        formData.append("imagenes", image);
       });
 
-      console.log('📤 Enviando formulario CON token...');
-      
-      // ENVIAR CON TOKEN - Esta es la corrección principal
-      const response = await axios.post('/api/games', formData, {
+      const response = await axios.post("/api/games", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`  // ✅ AGREGAR ESTA LÍNEA
-        }
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (response.data.success) {
-        alert('✅ Producto creado exitosamente!');
-        console.log('Juego creado:', response.data.game);
-        
-        // Limpiar formulario
+        alert("✅ Producto creado exitosamente!");
         e.target.reset();
         setSelectedImages([]);
       }
-      
     } catch (error) {
-      console.error('❌ Error al crear producto:', error);
-      alert(`❌ Error: ${error.response?.data?.error || 'No se pudo crear el producto'}`);
+      console.error("❌ Error al crear producto:", error);
+      alert(
+        `❌ Error: ${error.response?.data?.error || "No se pudo crear el producto"}`
+      );
     } finally {
       setSubmitting(false);
     }
