@@ -5,31 +5,60 @@ const bcrypt = require('bcryptjs'); // ✅ Usar bcryptjs
 // Registrar nuevo usuario
 const register = async (req, res) => {
   try {
-    const { Nombre_usuario, Correo, Contrasenia, Sexo, Rol, Telefono, Avatar} = req.body;
+    const {
+      Nombre_usuario,
+      Correo,
+      Contrasenia,
+      Sexo,
+      Rol,
+      Telefono,
+      Avatar
+    } = req.body;
 
-    console.log('📝 Datos recibidos para registro:', { Nombre_usuario, Correo, Sexo, Rol, Telefono, Avatar });
-
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ 
-      $or: [{ Correo }, { Nombre_usuario }] 
+    console.log('📝 Datos recibidos para registro:', {
+      Nombre_usuario,
+      Correo,
+      Sexo,
+      Rol,
+      Telefono,
+      Avatar
     });
-    
-    if (existingUser) {
+
+    // ---------------------------------------------------
+    // ✅ VALIDAR SI EL NOMBRE DE USUARIO YA EXISTE
+    // ---------------------------------------------------
+    const existingUsername = await User.findOne({ Nombre_usuario });
+
+    if (existingUsername) {
       return res.status(400).json({
         success: false,
-        error: 'El correo o nombre de usuario ya está registrado'
+        error: 'El nombre de usuario ya está registrado'
       });
     }
 
-    // ✅ HASHEAR LA CONTRASEÑA ANTES DE GUARDAR
+    // ---------------------------------------------------
+    // ✅ VALIDAR SI EL CORREO YA EXISTE
+    // ---------------------------------------------------
+    const existingEmail = await User.findOne({ Correo });
+
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'El correo ya está registrado'
+      });
+    }
+
+    // ---------------------------------------------------
+    // ✅ HASHEAR LA CONTRASEÑA
+    // ---------------------------------------------------
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(Contrasenia, saltRounds);
 
-    // Crear nuevo usuario con contraseña hasheada
+    // Crear nuevo usuario
     const user = new User({
       Nombre_usuario,
       Correo,
-      Contrasenia: hashedPassword, // ✅ Guardar contraseña hasheada
+      Contrasenia: hashedPassword,
       Sexo,
       Rol,
       Telefono,
@@ -37,7 +66,7 @@ const register = async (req, res) => {
     });
 
     const savedUser = await user.save();
-    
+
     console.log('✅ Usuario registrado exitosamente:', savedUser.Nombre_usuario);
 
     res.status(201).json({
@@ -53,9 +82,11 @@ const register = async (req, res) => {
         Avatar: savedUser.Avatar
       }
     });
+
   } catch (error) {
     console.error('❌ Error en registro:', error);
-    res.status(400).json({
+
+    res.status(500).json({
       success: false,
       error: 'Error al registrar usuario',
       details: error.message
